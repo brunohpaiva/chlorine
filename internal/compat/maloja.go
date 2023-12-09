@@ -2,7 +2,14 @@ package compat
 
 import "github.com/gofiber/fiber/v2"
 
-type MalojaCompat struct {
+type malojaCompat struct {
+	key string
+}
+
+func NewMalojaApiCompat(key string) ApiCompat {
+	return &malojaCompat{
+		key: key,
+	}
 }
 
 type MalojaNewscrobbleRequestBody struct {
@@ -14,7 +21,7 @@ type MalojaNewscrobbleRequestBody struct {
 	Key      string   `json:"key"`
 }
 
-func (m MalojaCompat) Install(app *fiber.App) error {
+func (m *malojaCompat) Install(app *fiber.App) error {
 	app.Get("/apis/mlj_1/serverinfo", func(c *fiber.Ctx) error {
 		return c.JSON(map[string]interface{}{
 			"name":          "chlorine (maloja compat)",
@@ -29,9 +36,19 @@ func (m MalojaCompat) Install(app *fiber.App) error {
 	})
 
 	app.Get("/apis/mlj_1/test", func(c *fiber.Ctx) error {
-		return c.JSON(map[string]interface{}{
-			"status": "ok",
-		})
+		key := c.Query("key")
+
+		if key != "" && !m.isValidKey(key) {
+			c.Status(fiber.StatusForbidden)
+			return c.JSON(map[string]interface{}{
+				"status": "error",
+				"error":  "Wrong API key",
+			})
+		} else {
+			return c.JSON(map[string]interface{}{
+				"status": "ok",
+			})
+		}
 	})
 
 	app.Get("/apis/mlj_1/scrobbles", func(c *fiber.Ctx) error {
@@ -45,6 +62,11 @@ func (m MalojaCompat) Install(app *fiber.App) error {
 			return err
 		}
 
+		if !m.isValidKey(reqBody.Key) {
+			c.Status(fiber.StatusForbidden)
+			return c.JSON(m.invalidAuthResponse())
+		}
+
 		// TODO
 		println("Received maloja scrobble", reqBody.Title)
 
@@ -54,4 +76,18 @@ func (m MalojaCompat) Install(app *fiber.App) error {
 	})
 
 	return nil
+}
+
+func (m *malojaCompat) isValidKey(suppliedKey string) bool {
+	return suppliedKey == m.key
+}
+
+func (m *malojaCompat) invalidAuthResponse() map[string]interface{} {
+	return map[string]interface{}{
+		"status": "failure",
+		"error": map[string]interface{}{
+			"type": "authentication_fail",
+			"desc": "Invalid or missing authentication",
+		},
+	}
 }

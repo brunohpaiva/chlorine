@@ -13,7 +13,7 @@ func CreateServer() *fiber.App {
 		Views: engine,
 	})
 
-	malojaCompat := compat.MalojaCompat{}
+	malojaCompat := compat.NewMalojaApiCompat("testapikey")
 	malojaCompat.Install(app)
 
 	app.Get("/", func(c *fiber.Ctx) error {
