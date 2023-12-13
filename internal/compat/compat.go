@@ -1,7 +1,9 @@
 package compat
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/labstack/echo/v4"
+)
 
 type ApiCompat interface {
-	Install(app *fiber.App) error
+	Install(app *echo.Echo) error
 }

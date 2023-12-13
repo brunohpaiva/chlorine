@@ -12,7 +12,7 @@ func main() {
 
 	app := server.CreateServer()
 
-	app.Listen(":8000")
+	app.Start(":8000")
 }
 
 func loadEnv() {

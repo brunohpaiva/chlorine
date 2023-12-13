@@ -1,6 +1,10 @@
 package compat
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"net/http"
+
+	"github.com/labstack/echo/v4"
+)
 
 type malojaCompat struct {
 	key string
@@ -21,9 +25,9 @@ type MalojaNewscrobbleRequestBody struct {
 	Key      string   `json:"key"`
 }
 
-func (m *malojaCompat) Install(app *fiber.App) error {
-	app.Get("/apis/mlj_1/serverinfo", func(c *fiber.Ctx) error {
-		return c.JSON(map[string]interface{}{
+func (m *malojaCompat) Install(app *echo.Echo) error {
+	app.GET("/apis/mlj_1/serverinfo", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]interface{}{
 			"name":          "chlorine (maloja compat)",
 			"version":       []string{"3", "2", "1"},
 			"versionstring": "3.2.1",
@@ -35,42 +39,40 @@ func (m *malojaCompat) Install(app *fiber.App) error {
 		})
 	})
 
-	app.Get("/apis/mlj_1/test", func(c *fiber.Ctx) error {
-		key := c.Query("key")
+	app.GET("/apis/mlj_1/test", func(c echo.Context) error {
+		key := c.QueryParam("key")
 
 		if key != "" && !m.isValidKey(key) {
-			c.Status(fiber.StatusForbidden)
-			return c.JSON(map[string]interface{}{
+			return c.JSON(http.StatusForbidden, map[string]interface{}{
 				"status": "error",
 				"error":  "Wrong API key",
 			})
 		} else {
-			return c.JSON(map[string]interface{}{
+			return c.JSON(http.StatusOK, map[string]interface{}{
 				"status": "ok",
 			})
 		}
 	})
 
-	app.Get("/apis/mlj_1/scrobbles", func(c *fiber.Ctx) error {
-		return c.JSON([]interface{}{})
+	app.GET("/apis/mlj_1/scrobbles", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, []interface{}{})
 	})
 
-	app.Post("/apis/mlj_1/newscrobble", func(c *fiber.Ctx) error {
+	app.POST("/apis/mlj_1/newscrobble", func(c echo.Context) error {
 		reqBody := new(MalojaNewscrobbleRequestBody)
 
-		if err := c.BodyParser(reqBody); err != nil {
+		if err := c.Bind(reqBody); err != nil {
 			return err
 		}
 
 		if !m.isValidKey(reqBody.Key) {
-			c.Status(fiber.StatusForbidden)
-			return c.JSON(m.invalidAuthResponse())
+			return c.JSON(http.StatusForbidden, m.invalidAuthResponse())
 		}
 
 		// TODO
 		println("Received maloja scrobble", reqBody.Title)
 
-		return c.JSON(map[string]interface{}{
+		return c.JSON(http.StatusOK, map[string]interface{}{
 			"status": "success",
 		})
 	})
