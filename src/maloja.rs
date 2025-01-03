@@ -1,10 +1,14 @@
+use std::sync::Arc;
+
 use askama_axum::{IntoResponse, Response};
 use axum::{
     async_trait,
-    extract::{FromRequest, Query, Request},
+    extract::{FromRequest, Query, Request, State},
     http::{header::CONTENT_TYPE, StatusCode},
     Form, Json, RequestExt,
 };
+
+use crate::AppState;
 
 #[derive(serde::Deserialize, Debug)]
 pub struct MalojaNewScrobbleReq {
@@ -15,24 +19,30 @@ pub struct MalojaNewScrobbleReq {
     albumartists: Option<Vec<String>>,
     duration: Option<u16>,
     length: Option<u16>,
-    time: Option<u32>,
+    time: Option<i64>,
     nofix: Option<bool>,
 }
 
 // Maloja accepts both query params or body with json/form data.
 pub async fn maloja_new_scrobble(
-    params: Option<Query<MalojaNewScrobbleReq>>,
-    payload: Option<JsonOrForm<MalojaNewScrobbleReq>>,
+    State(state): State<Arc<AppState>>,
+    query: Option<Query<MalojaNewScrobbleReq>>,
+    body: Option<JsonOrForm<MalojaNewScrobbleReq>>,
 ) -> Result<(), Response> {
-    let req: MalojaNewScrobbleReq = match (params, payload) {
-        (Some(params), None) => params.0,
-        (None, Some(payload)) => payload.0,
-        (None, None) => return Err(StatusCode::BAD_REQUEST.into_response()),
-        // Accept either query params or body, not both.
-        (Some(_), Some(_)) => return Err(StatusCode::BAD_REQUEST.into_response()),
+    let scrobble_data: MalojaNewScrobbleReq = match (query, body) {
+        (Some(query), None) => query.0,
+        (None, Some(body)) => body.0,
+        // Reject if either both query and body are missing, or if both are present.
+        (None, None) | (Some(_), Some(_)) => return Err(StatusCode::BAD_REQUEST.into_response()),
     };
 
-    dbg!(req);
+    let _conn = state
+        .pool
+        .get()
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+
+    dbg!(scrobble_data);
 
     Ok(())
 }
