@@ -5,10 +5,12 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use compat::maloja::maloja_new_scrobble;
 use deadpool_postgres::{tokio_postgres::NoTls, Config, CreatePoolError, Pool, Runtime};
-use maloja::maloja_new_scrobble;
 
-mod maloja;
+mod compat;
+mod db;
+mod extractor;
 
 pub struct AppConfig {
     addr: String,
