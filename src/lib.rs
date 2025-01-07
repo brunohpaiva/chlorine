@@ -1,19 +1,14 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use askama_axum::Template;
-use axum::{
-    routing::{get, post},
-    Router,
-};
-use compat::maloja::maloja_new_scrobble;
+use axum::Router;
 use config::AppConfig;
 use deadpool_postgres::{tokio_postgres::NoTls, Config, Pool, Runtime};
 
-mod compat;
 pub mod config;
 mod db;
 mod extractor;
+mod routes;
 
 struct AppState {
     pub pool: Pool,
@@ -29,12 +24,12 @@ pub async fn start_server(config: AppConfig) -> Result<()> {
     let state = Arc::new(AppState { pool });
 
     let app = Router::new()
-        .route("/", get(get_index))
-        // Maloja compat
-        .route("/apis/mlj_1/newscrobble", post(maloja_new_scrobble))
-        .with_state(state);
+        .merge(routes::main::build_router())
+        .merge(routes::api::build_router())
+        .with_state(state)
+        .with_state("".to_string());
 
-    println!("Running server on {}", config.addr);
+    tracing::info!("Running server on {}", config.addr);
 
     let listener = tokio::net::TcpListener::bind(config.addr).await?;
     axum::serve(listener, app).await?;
@@ -52,11 +47,3 @@ fn create_db_pool(config: &AppConfig) -> Result<Pool> {
 
     Ok(cfg.create_pool(Some(Runtime::Tokio1), NoTls)?)
 }
-
-async fn get_index() -> IndexTemplate {
-    IndexTemplate {}
-}
-
-#[derive(Template)]
-#[template(path = "index.html")]
-struct IndexTemplate;
