@@ -12,6 +12,7 @@ CREATE TABLE track (
 	id INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	title TEXT NOT NULL,
 	slug TEXT NOT NULL,
+	-- this is a dumb way to store artists I think, need to think more about it
 	main_artist_id INT NOT NULL REFERENCES artist,
 	length INT, -- allow null values for now
 	UNIQUE (slug)
