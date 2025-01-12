@@ -6,7 +6,7 @@ publish = false
 
 [dependencies]
 anyhow = "1.0.95"
-askama = "0.12.1"
+askama = { version = "0.12.1", features = ["with-axum"] }
 askama_axum = "0.4.0"
 axum = "0.7.9"
 deadpool-postgres = "0.14.1"

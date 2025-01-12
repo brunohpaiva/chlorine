@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use askama::Template;
-use askama_axum::{IntoResponse, Response};
+use askama_axum::{IntoResponse, Response, Template};
 use axum::{extract::State, http::StatusCode, routing::get, Router};
 use jiff::Timestamp;
 
