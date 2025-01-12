@@ -7,10 +7,10 @@
     <h2>Recent scrobbles</h2>
 
     <table>
-        <tbody >
+        <tbody>
             {% for scrobble in recent_scrobbles %}
                 <tr>
-                    <td><time datetime="{{ scrobble.utc_date_time }}">{{ scrobble.utc_date_time }}</time></td>
+                    <td><time datetime="{{ scrobble.utc_date_time }}">{{ scrobble.utc_date_time|relative_timestamp }}</time></td>
                     <td><a href="/artist/{{ scrobble.main_artist_slug }}">{{ scrobble.main_artist_name }}</a></td>
                     <td>{{ scrobble.title }}</td>
                 </tr>

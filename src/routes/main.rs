@@ -4,6 +4,7 @@ use askama_axum::{IntoResponse, Response, Template};
 use axum::{extract::State, http::StatusCode, routing::get, Router};
 use jiff::Timestamp;
 
+use crate::routes::filters;
 use crate::AppState;
 
 pub fn build_router() -> Router<Arc<AppState>> {
