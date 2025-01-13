@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "chlorine-api",
+  "type": "collection",
+  "ignore": [
+    ".git",
+    "target"
+  ]
+}

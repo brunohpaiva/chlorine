@@ -1,0 +1,20 @@
+meta {
+  name: scrobble json
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/apis/mlj_1/newscrobble
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "artist": "Loathe",
+    "title": "Heavy Is the Head That Falls with the Weight of a Thousand Thoughts",
+    "album": "I Let It in and It Took Everything",
+    "albumartists": ["Loathe"]
+  }
+}

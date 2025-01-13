@@ -1,0 +1,18 @@
+meta {
+  name: scrobble query
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/apis/mlj_1/newscrobble?artist=Loathe&title=Heavy Is the Head That Falls with the Weight of a Thousand Thoughts&album=I Let It in and It Took Everything&albumartists[0]=Loathe
+  body: none
+  auth: none
+}
+
+params:query {
+  artist: Loathe
+  title: Heavy Is the Head That Falls with the Weight of a Thousand Thoughts
+  album: I Let It in and It Took Everything
+  albumartists[0]: Loathe
+}
