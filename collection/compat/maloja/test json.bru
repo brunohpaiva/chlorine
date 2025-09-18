@@ -1,0 +1,17 @@
+meta {
+  name: test json
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/apis/mlj_1/test
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "key": "test-key-json"
+  }
+}

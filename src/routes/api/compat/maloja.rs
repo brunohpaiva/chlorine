@@ -2,10 +2,15 @@ use std::{sync::Arc, vec};
 
 use anyhow::Context;
 use axum::{
-    extract::{Query, State, rejection::QueryRejection},
+    Json,
+    extract::{
+        Query, State,
+        rejection::{JsonRejection, QueryRejection},
+    },
     http::StatusCode,
     response::{IntoResponse, Response},
 };
+use serde_json::json;
 
 use crate::{
     AppState,
@@ -44,14 +49,11 @@ impl From<MalojaNewScrobbleReq> for NewScrobble {
 // TODO: auth
 // TODO: better error handling (of course)
 // Maloja accepts both query params or body with json/form data.
-#[axum::debug_handler]
 pub async fn maloja_new_scrobble(
     State(state): State<Arc<AppState>>,
     query: Result<Query<MalojaNewScrobbleReq>, QueryRejection>,
     body: Option<JsonOrForm<MalojaNewScrobbleReq>>,
 ) -> Result<(), Response> {
-    println!("new scrobble: query={:?}, body={:?}", query, body);
-
     let maloja_scrobble: MalojaNewScrobbleReq = match (query, body) {
         (Ok(query), None) => query.0,
         (Err(_), Some(body)) => body.0,
@@ -79,4 +81,31 @@ pub async fn maloja_new_scrobble(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
     Ok(())
+}
+
+#[derive(serde::Deserialize, Debug)]
+pub struct MalojaTestParamsReq {
+    key: String,
+}
+
+pub async fn maloja_test(
+    State(_state): State<Arc<AppState>>,
+    query: Result<Query<MalojaTestParamsReq>, QueryRejection>,
+    // Maloja also accepts form urlencoded data for this GET endpoint,
+    // but that is not supported by the Form axum extractor and kinda invalid HTTP, so we ignore it.
+    body: Result<Json<MalojaTestParamsReq>, JsonRejection>,
+) -> impl IntoResponse {
+    let params = match (query, body) {
+        (Ok(query), Err(_)) => Some(query.0),
+        (Err(_), Ok(body)) => Some(body.0),
+        // Reject if either both query and body are missing, or if both are present.
+        (Err(_), Err(_)) | (Ok(_), Ok(_)) => None,
+    };
+
+    if let Some(_key) = params.and_then(|p| Some(p.key)) {
+        // TODO: check if key is valid
+        // return (StatusCode::FORBIDDEN, Json(json!({"status": "error", "error": "Wrong API key"})))
+    }
+
+    Json(json!({"status": "ok"}))
 }

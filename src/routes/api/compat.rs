@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use axum::{Router, routing::post};
+use axum::{
+    Router,
+    routing::{get, post},
+};
 
 use crate::AppState;
 
@@ -10,4 +13,5 @@ pub fn build_router() -> Router<Arc<AppState>> {
     Router::new()
         // Maloja
         .route("/apis/mlj_1/newscrobble", post(maloja::maloja_new_scrobble))
+        .route("/apis/mlj_1/test", get(maloja::maloja_test))
 }

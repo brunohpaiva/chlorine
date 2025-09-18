@@ -1,0 +1,15 @@
+meta {
+  name: test query
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/apis/mlj_1/test?key=test-key-query
+  body: none
+  auth: none
+}
+
+params:query {
+  key: test-key-query
+}
