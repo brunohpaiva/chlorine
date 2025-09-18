@@ -1,16 +1,19 @@
 use std::sync::Arc;
 
-use askama_axum::{IntoResponse, Response, Template};
-use axum::{extract::State, http::StatusCode, routing::get, Router};
+use askama::Template;
+use askama_web::WebTemplate;
+use axum::response::{IntoResponse, Response};
+use axum::{Router, extract::State, http::StatusCode, routing::get};
 use jiff::Timestamp;
 
-use crate::routes::filters;
 use crate::AppState;
+use crate::routes::filters;
 
 pub fn build_router() -> Router<Arc<AppState>> {
     Router::new().route("/", get(get_index))
 }
 
+#[axum::debug_handler]
 async fn get_index(State(state): State<Arc<AppState>>) -> Result<IndexTemplate, Response> {
     let conn = state
         .pool
@@ -57,7 +60,7 @@ struct Scrobble {
     main_artist_slug: String,
 }
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "index.html")]
 struct IndexTemplate {
     recent_scrobbles: Vec<Scrobble>,

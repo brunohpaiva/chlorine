@@ -3,7 +3,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use axum::Router;
 use config::AppConfig;
-use deadpool_postgres::{tokio_postgres::NoTls, Config, Pool, Runtime};
+use deadpool_postgres::{Config, Pool, Runtime, tokio_postgres::NoTls};
 
 pub mod config;
 mod db;

@@ -1,16 +1,16 @@
 use std::{sync::Arc, vec};
 
 use anyhow::Context;
-use askama_axum::{IntoResponse, Response};
 use axum::{
-    extract::{Query, State},
+    extract::{Query, State, rejection::QueryRejection},
     http::StatusCode,
+    response::{IntoResponse, Response},
 };
 
 use crate::{
-    db::{insert_scrobble, NewScrobble},
-    extractor::JsonOrForm,
     AppState,
+    db::{NewScrobble, insert_scrobble},
+    extractor::JsonOrForm,
 };
 
 #[derive(serde::Deserialize, Debug)]
@@ -41,18 +41,22 @@ impl From<MalojaNewScrobbleReq> for NewScrobble {
     }
 }
 
+// TODO: auth
 // TODO: better error handling (of course)
 // Maloja accepts both query params or body with json/form data.
+#[axum::debug_handler]
 pub async fn maloja_new_scrobble(
     State(state): State<Arc<AppState>>,
-    query: Option<Query<MalojaNewScrobbleReq>>,
+    query: Result<Query<MalojaNewScrobbleReq>, QueryRejection>,
     body: Option<JsonOrForm<MalojaNewScrobbleReq>>,
 ) -> Result<(), Response> {
+    println!("new scrobble: query={:?}, body={:?}", query, body);
+
     let maloja_scrobble: MalojaNewScrobbleReq = match (query, body) {
-        (Some(query), None) => query.0,
-        (None, Some(body)) => body.0,
+        (Ok(query), None) => query.0,
+        (Err(_), Some(body)) => body.0,
         // Reject if either both query and body are missing, or if both are present.
-        (None, None) | (Some(_), Some(_)) => return Err(StatusCode::BAD_REQUEST.into_response()),
+        (Err(_), None) | (Ok(_), Some(_)) => return Err(StatusCode::BAD_REQUEST.into_response()),
     };
 
     let new_scrobble: NewScrobble = maloja_scrobble.into();
