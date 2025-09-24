@@ -17,5 +17,31 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <h2>Top artists</h2>
+
+    <table>
+        <tbody>
+            {% for artist in top_artists %}
+                <tr>
+                    <td><a href="/artist/{{ artist.slug }}">{{ artist.name }}</a></td>
+                    <td>{{ artist.scrobble_count }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Top tracks</h2>
+
+    <table>
+        <tbody>
+            {% for track in top_tracks %}
+                <tr>
+                    <td><a href="/track/{{ track.slug }}">{{ track.main_artist_name }} - {{ track.title }}</a></td>
+                    <td>{{ track.scrobble_count }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}
