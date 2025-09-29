@@ -11,7 +11,7 @@
             {% for scrobble in recent_scrobbles %}
                 <tr>
                     <td><time datetime="{{ scrobble.utc_timestamp }}">{{ scrobble.utc_timestamp|relative_timestamp }}</time></td>
-                    <td><a href="/artist/{{ scrobble.main_artist_slug }}">{{ scrobble.main_artist_name }}</a></td>
+                    <td>{{ scrobble.artist_names }}</td>
                     <td>{{ scrobble.title }}</td>
                 </tr>
             {% endfor %}
@@ -37,7 +37,7 @@
         <tbody>
             {% for track in top_tracks %}
                 <tr>
-                    <td><a href="/track/{{ track.slug }}">{{ track.main_artist_name }} - {{ track.title }}</a></td>
+                    <td><a href="/track/{{ track.slug }}">{{ track.artist_names }} - {{ track.title }}</a></td>
                     <td>{{ track.scrobble_count }}</td>
                 </tr>
             {% endfor %}

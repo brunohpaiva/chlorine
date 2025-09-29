@@ -54,3 +54,12 @@ CREATE TABLE scrobble (
 	album_id INT REFERENCES album,
 	FOREIGN KEY (album_id, track_id) REFERENCES album_track (album_id, track_id)
 );
+
+CREATE VIEW track_artist_names AS
+SELECT
+	t.id AS track_id,
+	STRING_AGG(a.name, ', ' ORDER BY ta.artist_order) AS artist_names
+FROM track t
+INNER JOIN track_artist ta ON t.id = ta.track_id
+INNER JOIN artist a ON ta.artist_id = a.id
+GROUP BY t.id;
