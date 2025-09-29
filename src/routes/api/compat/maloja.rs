@@ -14,7 +14,7 @@ use serde_json::json;
 
 use crate::{
     AppState,
-    db::{NewScrobble, insert_scrobble},
+    db::scrobble::{NewScrobble, insert_scrobble},
     extractor::JsonOrForm,
 };
 

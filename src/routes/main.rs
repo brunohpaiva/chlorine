@@ -30,7 +30,7 @@ async fn get_index(State(state): State<Arc<AppState>>) -> Result<IndexTemplate, 
 }
 
 struct Scrobble {
-    utc_date_time: Timestamp,
+    utc_timestamp: Timestamp,
     title: String,
     main_artist_name: String,
     main_artist_slug: String,
@@ -40,10 +40,10 @@ async fn get_recent_scrobbles<C: GenericClient>(conn: &C) -> Result<Vec<Scrobble
     let rows = conn
         .query(
             "
-            SELECT s.utc_date_time, t.title, ma.name AS main_artist_name, ma.slug AS main_artist_slug FROM scrobble s
+            SELECT s.utc_timestamp, t.title, ma.name AS main_artist_name, ma.slug AS main_artist_slug FROM scrobble s
             INNER JOIN track t ON s.track_id = t.id
             INNER JOIN artist ma ON t.main_artist_id = ma.id
-            ORDER BY s.utc_date_time DESC
+            ORDER BY s.utc_timestamp DESC
             LIMIT 10
             ",
             &[],
@@ -54,7 +54,7 @@ async fn get_recent_scrobbles<C: GenericClient>(conn: &C) -> Result<Vec<Scrobble
     Ok(rows
         .iter()
         .map(|row| Scrobble {
-            utc_date_time: row.get(0),
+            utc_timestamp: row.get(0),
             title: row.get(1),
             main_artist_name: row.get(2),
             main_artist_slug: row.get(3),
@@ -89,7 +89,7 @@ async fn get_top_tracks<C: GenericClient>(
         .query(
             "
             SELECT t.id, t.title, t.slug, ma.name AS main_artist_name, ma.slug AS main_artist_slug, 
-            COUNT(s.utc_date_time) AS scrobble_count FROM scrobble s
+            COUNT(s.utc_timestamp) AS scrobble_count FROM scrobble s
             INNER JOIN track t ON s.track_id = t.id
             INNER JOIN artist ma ON t.main_artist_id = ma.id
             GROUP BY t.id, ma.id
@@ -130,7 +130,7 @@ async fn get_top_artists<C: GenericClient>(
     let rows = conn
         .query(
             "
-            SELECT ma.id, ma.name, ma.slug, COUNT(s.utc_date_time) AS scrobble_count FROM scrobble s
+            SELECT ma.id, ma.name, ma.slug, COUNT(s.utc_timestamp) AS scrobble_count FROM scrobble s
             INNER JOIN track t ON s.track_id = t.id
             INNER JOIN artist ma ON t.main_artist_id = ma.id
             GROUP BY ma.id

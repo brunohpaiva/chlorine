@@ -49,7 +49,7 @@ CREATE TABLE album_artist (
 );
 
 CREATE TABLE scrobble (
-	utc_date_time TIMESTAMPTZ NOT NULL PRIMARY KEY,
+	utc_timestamp TIMESTAMPTZ NOT NULL PRIMARY KEY,
 	track_id INT NOT NULL REFERENCES track,
 	album_id INT REFERENCES album,
 	FOREIGN KEY (album_id, track_id) REFERENCES album_track (album_id, track_id)
