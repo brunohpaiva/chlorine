@@ -1,0 +1,20 @@
+meta {
+  name: scrobble json - multiple artist track
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/apis/mlj_1/newscrobble
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "artists": ["Loathe", "Vincente Void"],
+    "title": "I Let It in and It Took Everything…",
+    "album": "I Let It in and It Took Everything",
+    "albumartists": ["Loathe"]
+  }
+}
