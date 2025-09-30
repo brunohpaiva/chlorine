@@ -38,18 +38,19 @@ pub async fn find_track<C: GenericClient>(
 
 pub struct NewTrack {
     pub title: String,
-    pub artists_ids: Vec<i32>,
+    pub artist_ids: Vec<i32>,
     pub length: Option<i32>,
     pub album_id: Option<i32>,
     pub album_track_number: Option<i32>,
 }
 
 pub async fn insert_track<C: GenericClient>(conn: &mut C, new_track: NewTrack) -> Result<i32> {
-    if new_track.artists_ids.is_empty() {
+    if new_track.artist_ids.is_empty() {
         return Err(NoArtistsError.into());
     }
 
-    if let Some(id) = find_track(conn, &new_track.title, &new_track.artists_ids).await? {
+    // Should we check matches against album too?
+    if let Some(id) = find_track(conn, &new_track.title, &new_track.artist_ids).await? {
         return Ok(id);
     }
 
@@ -76,7 +77,7 @@ pub async fn insert_track<C: GenericClient>(conn: &mut C, new_track: NewTrack) -
         )
         .await?;
 
-    for artist_id in &new_track.artists_ids {
+    for artist_id in &new_track.artist_ids {
         tx.execute(&stmt, &[&track_id, artist_id, &0]).await?;
     }
 

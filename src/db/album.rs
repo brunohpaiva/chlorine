@@ -37,7 +37,7 @@ pub async fn find_album<C: GenericClient>(
 }
 
 pub async fn insert_album<C: GenericClient>(
-    conn: &C,
+    conn: &mut C,
     title: &str,
     artist_ids: &[i32],
 ) -> Result<i32> {
@@ -45,17 +45,36 @@ pub async fn insert_album<C: GenericClient>(
         return Ok(id);
     }
 
-    let stmt = conn
-        .prepare("INSERT INTO album (name, slug) VALUES ($1, $2) RETURNING id;")
+    let tx = conn.transaction().await?;
+
+    let stmt = tx
+        .prepare("INSERT INTO album (title, slug) VALUES ($1, $2) RETURNING id;")
         .await
         .with_context(|| "failed to prepare insert album query")?;
 
     let slug = slug::slugify(title);
 
-    let row = conn
+    let row = tx
         .query_one(&stmt, &[&title, &slug])
         .await
         .with_context(|| format!("failed to execute insert album query: {title}"))?;
 
-    Ok(row.get("id"))
+    let album_id: i32 = row.get("id");
+
+    // TODO: handle credited_as, join_phrase and artist_order
+    let stmt = tx
+        .prepare(
+            "
+        INSERT INTO album_artist (album_id, artist_id, artist_order)
+        VALUES ($1, $2, $3)",
+        )
+        .await?;
+
+    for artist_id in artist_ids {
+        tx.execute(&stmt, &[&album_id, artist_id, &0]).await?;
+    }
+
+    tx.commit().await?;
+
+    Ok(album_id)
 }

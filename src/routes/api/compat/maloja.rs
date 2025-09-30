@@ -42,6 +42,8 @@ impl From<MalojaNewScrobbleReq> for NewScrobble {
         Self {
             track_title: value.title,
             track_artists,
+            album_title: value.album,
+            album_artists: value.albumartists,
         }
     }
 }
