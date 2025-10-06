@@ -20,18 +20,19 @@ pub async fn find_track<C: GenericClient>(
             "
             SELECT t.id FROM track t
             INNER JOIN track_artist ta ON t.id = ta.track_id
-            WHERE t.title = $1 AND ta.artist_id = ANY($2)
+            WHERE t.title = $1
             GROUP BY t.id
-            HAVING COUNT(DISTINCT ta.artist_id) = $3
+            HAVING ARRAY_AGG(DISTINCT ta.artist_id) @> $2
+            AND ARRAY_LENGTH(ARRAY_AGG(DISTINCT ta.artist_id), 1) = $3
             ",
         )
         .await
         .with_context(|| "failed to prepare find_track query")?;
 
     let result = conn
-        .query_opt(&stmt, &[&title, &artists, &(artists.len() as i64)])
+        .query_opt(&stmt, &[&title, &artists, &(artists.len() as i32)])
         .await
-        .with_context(|| format!("failed to find track {}", title))?;
+        .with_context(|| format!("failed to find track {title} with artists {:?}", artists))?;
 
     Ok(result.map(|row| row.get("id")))
 }
