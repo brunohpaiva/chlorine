@@ -31,20 +31,28 @@ pub struct MalojaNewScrobbleReq {
     nofix: Option<bool>,
 }
 
-impl From<MalojaNewScrobbleReq> for NewScrobble {
-    fn from(value: MalojaNewScrobbleReq) -> Self {
+impl TryFrom<MalojaNewScrobbleReq> for NewScrobble {
+    type Error = anyhow::Error;
+    fn try_from(value: MalojaNewScrobbleReq) -> Result<Self, Self::Error> {
         let mut track_artists = value.artist.map_or_else(|| vec![], |str| vec![str]);
 
         if let Some(mut other_track_artists) = value.artists {
             track_artists.append(&mut other_track_artists);
         }
 
-        Self {
+        let utc_timestamp = if let Some(time) = value.time {
+            Some(jiff::Timestamp::new(time, 0)?)
+        } else {
+            None
+        };
+
+        Ok(Self {
+            utc_timestamp: utc_timestamp,
             track_title: value.title,
             track_artists,
             album_title: value.album,
             album_artists: value.albumartists,
-        }
+        })
     }
 }
 
@@ -63,7 +71,9 @@ pub async fn maloja_new_scrobble(
         (Err(_), None) | (Ok(_), Some(_)) => return Err(StatusCode::BAD_REQUEST.into_response()),
     };
 
-    let new_scrobble: NewScrobble = maloja_scrobble.into();
+    let new_scrobble: NewScrobble = maloja_scrobble
+        .try_into()
+        .map_err(|_| StatusCode::BAD_REQUEST.into_response())?;
 
     if new_scrobble.track_artists.is_empty() {
         return Err(StatusCode::BAD_REQUEST.into_response());

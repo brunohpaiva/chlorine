@@ -8,6 +8,7 @@ use crate::db::{
 };
 
 pub struct NewScrobble {
+    pub utc_timestamp: Option<jiff::Timestamp>,
     pub track_title: String,
     pub track_artists: Vec<String>,
     pub album_title: Option<String>,
@@ -64,16 +65,18 @@ pub async fn insert_scrobble<C: GenericClient>(
     .await
     .with_context(|| format!("failed to insert track {}", new_scrobble.track_title))?;
 
+    let utc_timestamp = new_scrobble.utc_timestamp.unwrap_or_else(|| jiff::Timestamp::now());
+
     let stmt = tx
         .prepare(
             "
-        INSERT INTO scrobble (utc_timestamp, track_id, album_id) VALUES (CURRENT_TIMESTAMP, $1, $2)
+        INSERT INTO scrobble (utc_timestamp, track_id, album_id) VALUES ($1, $2, $3)
         ",
         )
         .await
         .with_context(|| "failed to prepare scrobble insert query")?;
 
-    tx.execute(&stmt, &[&track_id, &album_id])
+    tx.execute(&stmt, &[&utc_timestamp, &track_id, &album_id])
         .await
         .with_context(|| format!("failed to insert scrobble for track id {track_id}"))?;
 
