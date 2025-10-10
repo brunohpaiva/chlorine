@@ -6,7 +6,7 @@ use config::AppConfig;
 use deadpool_postgres::Pool;
 
 pub mod config;
-mod db;
+pub mod db;
 mod extractor;
 mod routes;
 
