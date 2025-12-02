@@ -26,8 +26,7 @@ pub async fn start_server(config: AppConfig) -> Result<()> {
     let app = Router::new()
         .merge(routes::main::build_router())
         .merge(routes::api::build_router())
-        .with_state(state)
-        .with_state("".to_string());
+        .with_state(state);
 
     tracing::info!("Running server on {}", config.addr);
 
