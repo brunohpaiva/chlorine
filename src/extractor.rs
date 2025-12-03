@@ -47,7 +47,7 @@ where
         if let Some(content_type) = content_type {
             if content_type.starts_with("application/json") {
                 let Json(payload) = req
-                    .extract::<Json<T>, _>()
+                    .extract()
                     .await
                     .map_err(|err| JsonOrFormRejection::Json(err))?;
                 return Ok(Self(payload));

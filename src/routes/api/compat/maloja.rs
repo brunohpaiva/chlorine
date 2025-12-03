@@ -1,5 +1,11 @@
 use std::{sync::Arc, vec};
 
+use crate::parser::parse_artists;
+use crate::{
+    AppState,
+    db::scrobble::{NewScrobble, insert_scrobble},
+    extractor::JsonOrForm,
+};
 use anyhow::Context;
 use axum::{
     Json,
@@ -11,12 +17,6 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde_json::json;
-
-use crate::{
-    AppState,
-    db::scrobble::{NewScrobble, insert_scrobble},
-    extractor::JsonOrForm,
-};
 
 #[derive(serde::Deserialize, Debug)]
 pub struct MalojaNewScrobbleReq {
@@ -34,11 +34,46 @@ pub struct MalojaNewScrobbleReq {
 impl TryFrom<MalojaNewScrobbleReq> for NewScrobble {
     type Error = anyhow::Error;
     fn try_from(value: MalojaNewScrobbleReq) -> Result<Self, Self::Error> {
-        let mut track_artists = value.artist.map_or_else(|| vec![], |str| vec![str]);
+        // FIXME: oh god this is a mess
 
-        if let Some(mut other_track_artists) = value.artists {
-            track_artists.append(&mut other_track_artists);
+        let mut track_artists: Vec<String> = vec![];
+
+        if let Some(artist) = value.artist {
+            // FIXME: this looks really stupid
+            let mut parsed_artists = parse_artists(&artist)?
+                .into_iter()
+                .map(|s| s.to_string())
+                .collect();
+            track_artists.append(&mut parsed_artists);
         }
+
+        if let Some(other_track_artists) = value.artists {
+            for artist in other_track_artists {
+                // FIXME: this looks really stupid x2
+                let mut parsed_artists = parse_artists(&artist)?
+                    .into_iter()
+                    .map(|s| s.to_string())
+                    .collect();
+                track_artists.append(&mut parsed_artists);
+            }
+        }
+
+        let album_artists: Option<Vec<String>> = if let Some(unparsed_album_artists) = value.albumartists {
+            let mut album_artists = vec![];
+
+            for artist in unparsed_album_artists {
+                // FIXME: this looks really stupid x3
+                let mut parsed_artists = parse_artists(&artist)?
+                    .into_iter()
+                    .map(|s| s.to_string())
+                    .collect();
+                album_artists.append(&mut parsed_artists);
+            }
+
+            Some(album_artists)
+        } else {
+            None
+        };
 
         let utc_timestamp = if let Some(time) = value.time {
             Some(jiff::Timestamp::new(time, 0)?)
@@ -47,11 +82,11 @@ impl TryFrom<MalojaNewScrobbleReq> for NewScrobble {
         };
 
         Ok(Self {
-            utc_timestamp: utc_timestamp,
+            utc_timestamp,
             track_title: value.title,
             track_artists,
             album_title: value.album,
-            album_artists: value.albumartists,
+            album_artists,
         })
     }
 }

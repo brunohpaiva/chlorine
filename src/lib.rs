@@ -9,6 +9,7 @@ pub mod config;
 pub mod db;
 mod extractor;
 mod routes;
+mod parser;
 
 struct AppState {
     pub pool: Pool,
