@@ -79,8 +79,9 @@ pub async fn insert_track<C: GenericClient>(conn: &mut C, new_track: NewTrack) -
         )
         .await?;
 
-    for artist_id in &new_track.artist_ids {
-        tx.execute(&stmt, &[&track_id, artist_id, &0]).await?;
+    for (index, artist_id) in new_track.artist_ids.iter().enumerate() {
+        let artist_order = index as i32 + 1;
+        tx.execute(&stmt, &[&track_id, &artist_id, &artist_order]).await?;
     }
 
     if let Some(album_id) = new_track.album_id {
