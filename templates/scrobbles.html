@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Scrobbles | chlorine{% endblock %}
+
+{% block body %}
+<div>
+    <h2>Scrobbles</h2>
+
+    <table>
+        <tbody>
+            {% for scrobble in scrobbles %}
+                <tr>
+                    <td><time datetime="{{ scrobble.utc_timestamp }}">{{ scrobble.utc_timestamp|relative_timestamp }}</time></td>
+                    <td>{{ scrobble.track_artist_names }}</td>
+                    <td>{{ scrobble.track_title }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

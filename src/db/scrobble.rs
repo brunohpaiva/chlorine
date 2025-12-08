@@ -89,3 +89,34 @@ pub async fn insert_scrobble<C: GenericClient>(
 
     Ok(())
 }
+
+pub struct Scrobble {
+    pub utc_timestamp: jiff::Timestamp,
+    pub track_id: i32,
+    pub track_title: String,
+    pub track_artist_names: String,
+}
+
+pub async fn get_scrobbles<C: GenericClient>(conn: &C, limit: i64) -> Result<Vec<Scrobble>> {
+    let rows = conn
+        .query(
+            "SELECT s.utc_timestamp, t.id, t.title, tan.artist_names FROM scrobble s
+            INNER JOIN track t ON s.track_id = t.id
+            INNER JOIN track_artist_names tan ON t.id = tan.track_id
+            ORDER BY s.utc_timestamp DESC
+            LIMIT $1",
+            &[&limit],
+        )
+        .await
+        .inspect_err(|err| eprintln!("{:?}", err))?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| Scrobble {
+            utc_timestamp: row.get(0),
+            track_id: row.get(1),
+            track_title: row.get(2),
+            track_artist_names: row.get(3),
+        })
+        .collect())
+}

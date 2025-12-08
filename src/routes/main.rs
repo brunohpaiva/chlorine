@@ -1,5 +1,6 @@
 mod artist;
 mod index;
+mod scrobbles;
 
 use std::sync::Arc;
 
@@ -10,5 +11,6 @@ use crate::AppState;
 pub fn build_router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/", get(index::get_index))
+        .route("/scrobbles", get(scrobbles::get_scrobbles))
         .route("/artist/{artist_id}", get(artist::get_artist))
 }

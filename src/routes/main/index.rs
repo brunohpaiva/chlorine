@@ -1,10 +1,10 @@
-use crate::{AppState, db};
+use crate::AppState;
 use askama::Template;
 use askama_web::WebTemplate;
-use jiff::Timestamp;
 use std::sync::Arc;
 
-use crate::db::track::RankTrack;
+use crate::db::scrobble::{Scrobble, get_scrobbles};
+use crate::db::track::{RankTrack, get_top_tracks};
 use crate::routes::filters;
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, http::StatusCode};
@@ -19,43 +19,14 @@ pub async fn get_index(State(state): State<Arc<AppState>>) -> Result<IndexTempla
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
     Ok(IndexTemplate {
-        recent_scrobbles: get_recent_scrobbles(&conn).await?,
+        recent_scrobbles: get_scrobbles(&conn, 10)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?,
         top_artists: get_top_artists(&conn, Period::AllTime).await?,
-        top_tracks: db::track::get_top_tracks(&conn, None)
+        top_tracks: get_top_tracks(&conn, None)
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?,
     })
-}
-
-struct Scrobble {
-    utc_timestamp: Timestamp,
-    title: String,
-    artist_names: String,
-}
-
-async fn get_recent_scrobbles<C: GenericClient>(conn: &C) -> Result<Vec<Scrobble>, Response> {
-    let rows = conn
-        .query(
-            "
-            SELECT s.utc_timestamp, t.title, tan.artist_names FROM scrobble s
-            INNER JOIN track t ON s.track_id = t.id
-            INNER JOIN track_artist_names tan ON t.id = tan.track_id
-            ORDER BY s.utc_timestamp DESC
-            LIMIT 10
-            ",
-            &[],
-        )
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
-
-    Ok(rows
-        .iter()
-        .map(|row| Scrobble {
-            utc_timestamp: row.get(0),
-            title: row.get(1),
-            artist_names: row.get(2),
-        })
-        .collect())
 }
 
 enum Period {
