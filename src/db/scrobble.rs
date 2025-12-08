@@ -1,11 +1,11 @@
-use anyhow::{Context, Result};
-use deadpool_postgres::GenericClient;
-use tracing::debug;
 use crate::db::{
     album::insert_album,
     artist::insert_artist,
     track::{NewTrack, insert_track},
 };
+use anyhow::{Context, Result};
+use deadpool_postgres::GenericClient;
+use tracing::debug;
 
 #[derive(Debug)]
 pub struct NewScrobble {
@@ -21,7 +21,7 @@ pub async fn insert_scrobble<C: GenericClient>(
     new_scrobble: &NewScrobble,
 ) -> Result<()> {
     debug!("Inserting scrobble {:?}", new_scrobble);
-    
+
     let mut tx = conn
         .transaction()
         .await
@@ -68,7 +68,9 @@ pub async fn insert_scrobble<C: GenericClient>(
     .await
     .with_context(|| format!("failed to insert track {}", new_scrobble.track_title))?;
 
-    let utc_timestamp = new_scrobble.utc_timestamp.unwrap_or_else(|| jiff::Timestamp::now());
+    let utc_timestamp = new_scrobble
+        .utc_timestamp
+        .unwrap_or_else(|| jiff::Timestamp::now());
 
     let stmt = tx
         .prepare(

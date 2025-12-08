@@ -58,22 +58,23 @@ impl TryFrom<MalojaNewScrobbleReq> for NewScrobble {
             }
         }
 
-        let album_artists: Option<Vec<String>> = if let Some(unparsed_album_artists) = value.albumartists {
-            let mut album_artists = vec![];
+        let album_artists: Option<Vec<String>> =
+            if let Some(unparsed_album_artists) = value.albumartists {
+                let mut album_artists = vec![];
 
-            for artist in unparsed_album_artists {
-                // FIXME: this looks really stupid x3
-                let mut parsed_artists = parse_artists(&artist)?
-                    .into_iter()
-                    .map(|s| s.to_string())
-                    .collect();
-                album_artists.append(&mut parsed_artists);
-            }
+                for artist in unparsed_album_artists {
+                    // FIXME: this looks really stupid x3
+                    let mut parsed_artists = parse_artists(&artist)?
+                        .into_iter()
+                        .map(|s| s.to_string())
+                        .collect();
+                    album_artists.append(&mut parsed_artists);
+                }
 
-            Some(album_artists)
-        } else {
-            None
-        };
+                Some(album_artists)
+            } else {
+                None
+            };
 
         let utc_timestamp = if let Some(time) = value.time {
             Some(jiff::Timestamp::new(time, 0)?)

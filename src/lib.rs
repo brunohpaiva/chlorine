@@ -8,8 +8,8 @@ use deadpool_postgres::Pool;
 pub mod config;
 pub mod db;
 mod extractor;
-mod routes;
 mod parser;
+mod routes;
 
 struct AppState {
     pub pool: Pool,

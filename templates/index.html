@@ -24,7 +24,7 @@
         <tbody>
             {% for artist in top_artists %}
                 <tr>
-                    <td><a href="/artist/{{ artist.slug }}">{{ artist.name }}</a></td>
+                    <td><a href="/artist/{{ artist.id }}">{{ artist.name }}</a></td>
                     <td>{{ artist.scrobble_count }}</td>
                 </tr>
             {% endfor %}

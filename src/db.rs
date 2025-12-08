@@ -4,9 +4,9 @@ use deadpool_postgres::{Config, Pool, Runtime, tokio_postgres::NoTls};
 use crate::config::AppConfig;
 
 mod album;
-mod artist;
+pub mod artist;
 pub mod scrobble;
-mod track;
+pub mod track;
 
 pub fn create_pool(config: &AppConfig) -> Result<Pool> {
     let mut cfg = Config::new();

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}{{ artist_name }} | chlorine{% endblock %}
+
+{% block body %}
+<div>
+    <h1>{{ artist_name }}</h1>
+
+    <h2>Top tracks</h2>
+
+    <table>
+        <tbody>
+        {% for track in top_tracks %}
+        <tr>
+            <td><a href="/track/{{ track.slug }}">{{ track.artist_names }} - {{ track.title }}</a></td>
+            <td>{{ track.scrobble_count }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

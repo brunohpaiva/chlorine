@@ -34,3 +34,12 @@ pub async fn find_artist<C: GenericClient>(conn: &C, name: &str) -> Result<Optio
 
     Ok(row.map(|r| r.get("id")))
 }
+
+pub async fn get_artist_name<C: GenericClient>(conn: &C, id: i32) -> Result<Option<String>> {
+    let row = conn
+        .query_opt("SELECT name FROM artist WHERE id = $1", &[&id])
+        .await
+        .with_context(|| format!("failed to execute get artist name query: {id}"))?;
+
+    Ok(row.map(|r| r.get("name")))
+}

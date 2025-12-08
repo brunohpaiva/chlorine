@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use deadpool_postgres::GenericClient;
 use thiserror::Error;
+use tokio_postgres::types::ToSql;
 
 #[derive(Error, Debug, Default)]
 #[error("empty artists vector specified")]
@@ -103,4 +104,61 @@ pub async fn insert_track<C: GenericClient>(conn: &mut C, new_track: NewTrack) -
     tx.commit().await?;
 
     Ok(track_id)
+}
+
+pub struct RankTrack {
+    pub id: i32,
+    pub title: String,
+    pub slug: String,
+    pub artist_names: String,
+    pub scrobble_count: i64,
+}
+
+pub async fn get_top_tracks<C: GenericClient>(
+    conn: &C,
+    artist_filter: Option<i32>,
+) -> Result<Vec<RankTrack>> {
+    // TODO: implement period filtering
+
+    let mut query = "
+            SELECT t.id, t.title, t.slug, tan.artist_names,
+            COUNT(s.utc_timestamp) AS scrobble_count FROM scrobble s
+            INNER JOIN track t ON s.track_id = t.id
+            INNER JOIN track_artist_names tan ON t.id = tan.track_id
+            INNER JOIN track_artist ta ON t.id = ta.track_id
+            WHERE 1 > 0"
+        .to_string();
+    let mut params: Vec<Box<dyn ToSql + Sync + Send>> = Vec::with_capacity(1);
+
+    if let Some(artist_filter) = artist_filter {
+        query.push_str(" AND ta.artist_id = $1");
+        params.push(Box::new(artist_filter));
+    }
+
+    query.push_str(
+        " GROUP BY t.id, tan.artist_names
+            ORDER BY scrobble_count DESC
+            LIMIT 10",
+    );
+
+    let rows = conn
+        .query(
+            &query,
+            &params
+                .iter()
+                .map(|x| x.as_ref() as &(dyn ToSql + Sync))
+                .collect::<Vec<_>>(),
+        )
+        .await?;
+
+    Ok(rows
+        .iter()
+        .map(|row| RankTrack {
+            id: row.get(0),
+            title: row.get(1),
+            slug: row.get(2),
+            artist_names: row.get(3),
+            scrobble_count: row.get(4),
+        })
+        .collect())
 }
